@@ -4,6 +4,22 @@
 
 using namespace OpenYAMM::Game;
 
+TEST_CASE("wide character screen preference survives settings save and reload")
+{
+    GameSettings settings = GameSettings::createDefault();
+    const std::filesystem::path path = std::filesystem::temp_directory_path() / "openyamm-wide-character-settings.ini";
+    std::string error;
+    for (const bool enabled : {true, false})
+    {
+        settings.wideCharacterScreen = enabled;
+        REQUIRE(saveGameSettings(path, settings, error));
+        const std::optional<GameSettings> loaded = loadGameSettings(path, error);
+        REQUIRE_MESSAGE(loaded, error);
+        CHECK(loaded->wideCharacterScreen == enabled);
+    }
+    std::filesystem::remove(path);
+}
+
 TEST_CASE("creature shadow quality and LOD settings validate and persist")
 {
     GameSettings settings = GameSettings::createDefault();

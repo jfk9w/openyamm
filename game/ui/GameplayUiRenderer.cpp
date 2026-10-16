@@ -3,6 +3,7 @@
 #include "game/ui/GameplayBuffHud.h"
 #include "game/ui/GameplayClock.h"
 #include "game/ui/GameplayUiRenderer.h"
+#include "game/ui/WideCharacterLayout.h"
 
 #include "game/gameplay/GameMechanics.h"
 #include "game/gameplay/GameplayFxService.h"
@@ -425,7 +426,14 @@ void GameplayUiRenderer::renderGameplayHudArt(GameplayScreenRuntime &context, in
     };
     if (isLimitedOverlayHud)
     {
-        draw("OutdoorBasebar");
+        if (const std::optional<WideCharacterLayout> wide = context.wideCharacterLayout(width, height))
+        {
+            GameplayUiSkin::renderPanel(context, wide->portraitPanelRect(), false, 0.45f);
+        }
+        else
+        {
+            draw("OutdoorBasebar");
+        }
     }
     else
     {
@@ -645,7 +653,7 @@ void GameplayUiRenderer::renderGameplayHudArt(GameplayScreenRuntime &context, in
             }
         }
     }
-    if (isLimitedOverlayHud)
+    if (isLimitedOverlayHud && !context.wideCharacterLayout(width, height))
     {
         for (size_t i = members.size(); i < 5; ++i)
         {

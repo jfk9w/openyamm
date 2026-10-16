@@ -1,5 +1,6 @@
 #include "game/gameplay/GameplayScreenRuntime.h"
 #include "game/ui/GameplayHudCommon.h"
+#include "game/ui/WideCharacterLayout.h"
 
 #include "game/app/GameSession.h"
 #include "game/audio/SoundIds.h"
@@ -3484,6 +3485,96 @@ std::optional<GameplayScreenRuntime::ResolvedHudLayoutElement> GameplayScreenRun
     {
         return rect;
     }
+    if (const std::optional<WideCharacterLayout> wide = wideCharacterLayout(screenWidth, screenHeight))
+    {
+        const HudLayoutElement *pLayout = findHudLayoutElement(layoutId);
+        if (pLayout != nullptr && pLayout->normalizedScreen == "character")
+        {
+            const std::optional<ResolvedHudLayoutElement> native =
+                uiRuntime().resolveHudLayoutElement(layoutId, 640, 480, fallbackWidth, fallbackHeight);
+            if (native)
+            {
+                rect = wide->placeContent(*native);
+                const float extraWidth = wide->extraContentWidth() * wide->scale;
+                const HudLayoutElement *pSection = pLayout;
+                while (pSection != nullptr && !pSection->parentId.empty()
+                    && pSection->parentId != "CharacterRoot")
+                {
+                    pSection = findHudLayoutElement(pSection->parentId);
+                }
+                const std::string section = pSection != nullptr ? pSection->normalizedId : std::string{};
+                if (section == "characterdollpanel")
+                {
+                    rect->x += extraWidth;
+                }
+                else if (section == "characterstatspage" || section == "characterskillspage"
+                    || section == "characterinventorypage" || section == "characterawardspage")
+                {
+                    if (pSection == pLayout)
+                    {
+                        rect->width += extraWidth;
+                    }
+                    else
+                    {
+                        rect->x += extraWidth * 0.5f;
+                    }
+                }
+                else if (section == "charactertopbar" && pSection == pLayout)
+                {
+                    rect->width += extraWidth;
+                }
+                else if (section == "characterstatsbutton" || section == "characterskillsbutton"
+                    || section == "characterinventorybutton" || section == "characterawardsbutton"
+                    || section == "characterexitbutton")
+                {
+                    rect->x += extraWidth * 0.5f;
+                }
+                if (pLayout->normalizedId == "characterroot")
+                {
+                    rect = wide->contentRect();
+                }
+                // Move the three former bottom-right actions below the page, clear of the paperdoll.
+                if (pLayout->normalizedId == "characterinventorysortbutton"
+                    || pLayout->normalizedId == "characteralchemybutton"
+                    || pLayout->normalizedId == "characterdismissbutton")
+                {
+                    const float x = pLayout->normalizedId == "characterinventorysortbutton" ? 16.0f
+                        : pLayout->normalizedId == "characteralchemybutton" ? 106.0f : 196.0f;
+                    rect->x = wide->contentX + x * wide->scale + extraWidth * 0.5f;
+                    rect->y = wide->contentY + 374 * wide->scale;
+                }
+            }
+        }
+        else if (pLayout != nullptr && pLayout->normalizedId.starts_with("obsidianoverlaypc"))
+        {
+            const HudLayoutElement *pSlot = pLayout;
+            while (pSlot != nullptr && pSlot->parentId != "OutdoorPartyStrip")
+            {
+                pSlot = pSlot->parentId.empty() ? nullptr : findHudLayoutElement(pSlot->parentId);
+            }
+            const Party *pParty = partyReadOnly();
+            for (size_t index = 0; pSlot != nullptr && index < pParty->members().size(); ++index)
+            {
+                if (pSlot->id != "ObsidianOverlayPc" + std::to_string(index + 1))
+                {
+                    continue;
+                }
+                const std::optional<ResolvedHudLayoutElement> native =
+                    uiRuntime().resolveHudLayoutElement(layoutId, 640, 480, fallbackWidth, fallbackHeight);
+                const std::optional<ResolvedHudLayoutElement> nativeSlot =
+                    uiRuntime().resolveHudLayoutElement(pSlot->id, 640, 480, 0, 0);
+                if (native && nativeSlot)
+                {
+                    rect = wide->placePortrait(*native, *nativeSlot, index);
+                }
+                break;
+            }
+        }
+        else if (pLayout != nullptr && pLayout->normalizedId == "outdoorstatusbar")
+        {
+            rect = wide->statusRect();
+        }
+    }
     const Party *pParty = partyReadOnly();
     const size_t count = pParty != nullptr ? std::clamp(pParty->members().size(), size_t{1}, size_t{5}) : 5;
     if (layoutId.starts_with("ObsidianPc") || layoutId == "OutdoorGameplayBasebar")
@@ -3551,6 +3642,19 @@ std::optional<GameplayScreenRuntime::ResolvedHudLayoutElement> GameplayScreenRun
         pElement = pElement->parentId.empty() ? nullptr : findHudLayoutElement(pElement->parentId);
     }
     return rect;
+}
+
+std::optional<WideCharacterLayout> GameplayScreenRuntime::wideCharacterLayout(int width, int height) const
+{
+    const Party *pParty = partyReadOnly();
+    const GameplayUiController::CharacterScreenState &screen = characterScreenReadOnly();
+    if (!settingsSnapshot().wideCharacterScreen || currentHudScreenState() != GameplayHudScreenState::Character
+        || screen.source != GameplayUiController::CharacterScreenSource::Party || screen.alchemyBench.active
+        || pParty == nullptr)
+    {
+        return std::nullopt;
+    }
+    return WideCharacterLayout::compute(width, height, pParty->members().size());
 }
 
 std::optional<GameplayScreenRuntime::ResolvedHudLayoutElement> GameplayScreenRuntime::resolvePartyPortraitRect(

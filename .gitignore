@@ -1,4 +1,6 @@
 /build/
+/.venv/
+/.mise.local.toml
 /build-vulkan/
 /build-gprof/
 /build-prof/

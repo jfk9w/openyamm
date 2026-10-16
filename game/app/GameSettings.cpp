@@ -833,6 +833,11 @@ std::optional<GameSettings> loadGameSettings(const std::filesystem::path &path, 
         }
     }
 
+    if (const std::optional<std::string> value = getIniValue(document, "video", "wide_character_screen"))
+    {
+        parseBoolValue(*value, settings.wideCharacterScreen);
+    }
+
     if (const std::optional<std::string> value = getIniValue(document, "controls", "mouse_sensitivity"))
     {
         int parsed = settings.mouseSensitivity;
@@ -1980,6 +1985,7 @@ bool saveGameSettings(const std::filesystem::path &path, const GameSettings &set
     output
         << '\n'
         << "[video]\n"
+        << "wide_character_screen=" << (settings.wideCharacterScreen ? "true" : "false") << '\n'
         << "blood_splats=" << (settings.bloodSplats ? "true" : "false") << '\n'
         << "colored_lights=" << (settings.coloredLights ? "true" : "false") << '\n'
         << "tinting=" << (settings.tinting ? "true" : "false") << '\n'

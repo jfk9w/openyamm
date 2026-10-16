@@ -1,4 +1,5 @@
 #include "game/ui/GameplayPartyOverlayRenderer.h"
+#include "game/ui/WideCharacterLayout.h"
 #include "game/ui/GameplayClock.h"
 #include "game/ui/RestHourglassAnimation.h"
 #include "engine/SpriteAtlas.h"
@@ -5813,7 +5814,8 @@ void GameplayPartyOverlayRenderer::renderHeldInventoryItem(GameplayScreenRuntime
     setupHudProjection(width, height);
 
     const GameplayUiViewportRect uiViewport = GameplayHudCommon::computeUiViewportRect(width, height);
-    const float scale = std::min(
+    const std::optional<WideCharacterLayout> wide = context.wideCharacterLayout(width, height);
+    const float scale = wide ? wide->scale : std::min(
         std::min(uiViewport.width / HudReferenceWidth, uiViewport.height / HudReferenceHeight),
         MaxUiScale);
     const PointerRenderInput pointerInput = pointerRenderInput(context);
@@ -8125,6 +8127,14 @@ void GameplayPartyOverlayRenderer::renderCharacterOverlay(
     context.prepareHudView(width, height);
     renderViewportParchmentSidePanels(context, width, height);
 
+    if (!renderAboveHud)
+    {
+        if (const std::optional<WideCharacterLayout> wide = context.wideCharacterLayout(width, height))
+        {
+            GameplayUiSkin::renderPanel(context, wide->frameRect(), false, 0.45f);
+        }
+    }
+
     const GameplayUiViewportRect uiViewport = GameplayHudCommon::computeUiViewportRect(width, height);
     const float baseScale = std::min(
         std::min(uiViewport.width / HudReferenceWidth, uiViewport.height / HudReferenceHeight),
@@ -9087,6 +9097,15 @@ void GameplayPartyOverlayRenderer::renderCharacterOverlay(
         }
 
         const std::string normalizedLayoutId = toLowerCopy(pLayout->id);
+
+        if (context.wideCharacterLayout(width, height)
+            && (normalizedLayoutId == "characterstatspage" || normalizedLayoutId == "characterskillspage"
+                || normalizedLayoutId == "characterinventorypage" || normalizedLayoutId == "characterawardspage"
+                || normalizedLayoutId == "charactertopbar"))
+        {
+            GameplayUiSkin::renderPanel(context, *resolved, false, 0.45f);
+            continue;
+        }
 
         if (isAdventurersInnRoster)
         {

@@ -2,6 +2,28 @@
 
 This Android project builds an SDL3-based OpenYAMM APK.
 
+On wide landscape displays (aspect ratio at least 1.65), the party character screen uses a vertical portrait
+column on the left, the selected character's pages in the centre, and equipment on the right. All five party
+members fit without scrolling. Portraits, equipment and the 14×9 inventory grid keep their proportions;
+the status/input rail stays at the bottom. Sort, Alchemy and Dismiss sit below the page. Other overlays,
+the Adventurer's Guild, the alchemy bench and narrow displays retain their existing layouts.
+The `[video] wide_character_screen` preference defaults to true on Android and false on desktop;
+desktop captures can enable it in isolated settings to preview the same layout.
+
+**WIP handoff:** this layout is not ready for release. The first native desktop capture showed missing left-hand
+portraits and a paperdoll cut off at the old 4:3 boundary. Investigate side-panel drawing order and clipping before
+accepting the appearance; the cause has not been confirmed. The final refinement expands the page panels, centres
+their fixed-size contents and anchors the paperdoll to the right. Recheck that refinement visually, including portrait
+selection, item dragging, inspection, all four tabs, and parties of one through five members.
+
+An earlier focused run passed four tests / 516 assertions; rerun `*wide character*` after building the final changes.
+The Android release build was started but not completed, and no physical-phone check was performed.
+For a new workstation, run `mise install` and `mise run setup-python`; `mise run setup-android` installs the SDK
+packages when an Android build is needed. Configure a fresh build directory on the new OS rather than copying
+the Linux build cache. The layout can be previewed on desktop with `video.wide_character_screen=true`.
+The pre-commit lighting audit also reported 42 stale outdoor bakes with legacy texture dependencies; this UI-only
+WIP does not change lighting assets or attempt to regenerate them without the corresponding sources.
+
 - Debug builds include `arm64-v8a` and `x86_64` for emulator testing.
 - Release builds include only `arm64-v8a` for production sideloading.
 - APK assets are mounted from the installed APK. Large runtime asset packages are not extracted to app storage.

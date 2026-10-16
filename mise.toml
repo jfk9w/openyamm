@@ -1,0 +1,15 @@
+[tools]
+android-sdk = "23.0"
+cmake = "4.1.2"
+java = "21.0.2"
+ninja = "1.13.1"
+python = "3.14.4"
+
+[env]
+_.python.venv = { path = ".venv", create = true }
+
+[tasks.setup-python]
+run = "python -m pip install Pillow==12.3.0 PyYAML==6.0.3"
+
+[tasks.setup-android]
+run = "sdkmanager 'platform-tools' 'platforms;android-35' 'build-tools;34.0.0' 'ndk;28.2.13676358' 'cmake;3.22.1'"

@@ -30,6 +30,7 @@
 namespace OpenYAMM::Game
 {
 class GameSession;
+struct WideCharacterLayout;
 class GameAudioSystem;
 class GameplayFxService;
 class TurnBasedCombatRuntime;
@@ -359,6 +360,7 @@ public:
         int screenHeight,
         float fallbackWidth,
         float fallbackHeight) const;
+    std::optional<WideCharacterLayout> wideCharacterLayout(int width, int height) const;
     std::optional<ResolvedHudLayoutElement> resolvePartyPortraitRect(int width, int height, size_t memberIndex) const;
     std::optional<size_t> resolvePartyPortraitIndexAtPoint(int width, int height, float x, float y) const;
     float characterSkillRowHeight() const;

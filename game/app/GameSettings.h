@@ -146,6 +146,11 @@ struct GameSettings
     bool flipOnExit = false;
     int mouseSensitivity = 100;
     bool invertMouseY = false;
+#if defined(__ANDROID__)
+    bool wideCharacterScreen = true;
+#else
+    bool wideCharacterScreen = false;
+#endif
     ControlScheme controlScheme = ControlScheme::Modern;
     bool bloodSplats = true;
     bool coloredLights = true;

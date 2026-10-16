@@ -109,6 +109,7 @@ add_executable(openyamm_unit_tests
     UiLayoutManagerTests.cpp
     GameplayHudLayoutCacheTests.cpp
     GameplayHudGeometryTests.cpp
+    WideCharacterLayoutTests.cpp
     GameplayScreenRuntimeTestStubs.cpp
     ../game/app/GameSettings.cpp
     ../game/app/GameInputSystem.cpp
